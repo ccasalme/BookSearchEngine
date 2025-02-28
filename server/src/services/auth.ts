@@ -1,39 +1,34 @@
-import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-
 import dotenv from 'dotenv';
 dotenv.config();
 
 interface JwtPayload {
-  _id: unknown;
+  _id: string;
   username: string;
-  email: string,
+  email: string;
 }
 
-export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
-  const authHeader = req.headers.authorization;
+const secretKey = process.env.JWT_SECRET_KEY || 'defaultsecret';
 
-  if (authHeader) {
-    const token = authHeader.split(' ')[1];
-
-    const secretKey = process.env.JWT_SECRET_KEY || '';
-
-    jwt.verify(token, secretKey, (err, user) => {
-      if (err) {
-        return res.sendStatus(403); // Forbidden
-      }
-
-      req.user = user as JwtPayload;
-      return next();
-    });
-  } else {
-    res.sendStatus(401); // Unauthorized
-  }
+export const signToken = ({ _id, username, email }: JwtPayload) => {
+  return jwt.sign({ _id, username, email }, secretKey, { expiresIn: '1h' });
 };
 
-export const signToken = (username: string, email: string, _id: unknown) => {
-  const payload = { username, email, _id };
-  const secretKey = process.env.JWT_SECRET_KEY || '';
+// GraphQL authentication middleware (used in Apollo context)
+export const authMiddleware = ({ req }: { req: any }) => {
+  let token = req.headers.authorization || '';
 
-  return jwt.sign(payload, secretKey, { expiresIn: '1h' });
+  if (token.startsWith('Bearer ')) {
+    token = token.slice(7, token.length);
+  }
+
+  if (!token) return { user: null };
+
+  try {
+    const decoded = jwt.verify(token, secretKey) as JwtPayload;
+    return { user: decoded };
+  } catch (err) {
+    console.log('Invalid token:', err);
+    return { user: null };
+  }
 };
