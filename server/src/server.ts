@@ -4,9 +4,11 @@ import { expressMiddleware } from '@apollo/server/express4';
 import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import typeDefs from './schemas/typeDefs';
-import resolvers from './schemas/resolvers';
+import typeDefs from './schemas/typeDefs.js';
+import resolvers from './schemas/resolvers.js';
 import { authMiddleware } from './services/auth';
+import { ExpressContextFunctionArgument } from '@apollo/server/express4';
+
 
 dotenv.config();
 
@@ -31,10 +33,9 @@ async function startServer() {
   await server.start();
 
   app.use('/graphql', expressMiddleware(server, {
-    context: async ({ req }) => {
-      // Apply authMiddleware securely without exposing CORS (don't ever use CORS)
-      return authMiddleware({ req });
-    },
+    context: async ({ req }: ExpressContextFunctionArgument) => authMiddleware({ req }),
+
+
   }));
 
   app.listen(PORT, () => {
