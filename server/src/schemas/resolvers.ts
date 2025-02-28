@@ -1,6 +1,7 @@
 import { AuthenticationError } from 'apollo-server-errors';
-import User, { UserDocument } from '../models/User.js';
-import { signToken } from '../services/auth.js';
+import User from '../models/User.ts';
+import type { UserDocument } from '../models/User.ts';
+import { signToken } from '../services/auth.ts';
 
 const resolvers = {
   Query: {
@@ -17,7 +18,7 @@ const resolvers = {
         throw new AuthenticationError('Invalid credentials');
       }
       const token = signToken({
-        _id: user._id.toHexString(),  // ✅ Convert ObjectId to string
+        _id: user._id.toHexString(),
         username: user.username,
         email: user.email,
       });
@@ -27,7 +28,7 @@ const resolvers = {
     addUser: async (_parent: any, { username, email, password }: { username: string, email: string, password: string }) => {
       const user: UserDocument = await User.create({ username, email, password });
       const token = signToken({
-        _id: user._id.toHexString(),  // ✅ Convert ObjectId to string
+        _id: user._id.toHexString(),
         username: user.username,
         email: user.email,
       });
@@ -37,7 +38,7 @@ const resolvers = {
     saveBook: async (_parent: any, { input }: any, context: any) => {
       if (!context.user) throw new AuthenticationError('Not logged in');
       return User.findByIdAndUpdate(
-        context.user._id.toString(),  // ✅ Ensure it's a string
+        context.user._id.toString(),
         { $push: { savedBooks: input } },
         { new: true }
       );
@@ -46,7 +47,7 @@ const resolvers = {
     removeBook: async (_parent: any, { bookId }: any, context: any) => {
       if (!context.user) throw new AuthenticationError('Not logged in');
       return User.findByIdAndUpdate(
-        context.user._id.toString(),  // ✅ Ensure it's a string
+        context.user._id.toString(),
         { $pull: { savedBooks: { bookId } } },
         { new: true }
       );

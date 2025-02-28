@@ -4,10 +4,12 @@ import { expressMiddleware } from '@apollo/server/express4';
 import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import typeDefs from './schemas/typeDefs.js';
-import resolvers from './schemas/resolvers.js';
-import { authMiddleware } from './services/auth';
-import { ExpressContextFunctionArgument } from '@apollo/server/express4';
+import typeDefs from './schemas/typeDefs.ts';
+import resolvers from './schemas/resolvers.ts';
+import { authMiddleware } from './services/auth.ts';
+import type { JwtPayload } from 'jsonwebtoken';
+import type { ExpressContextFunctionArgument } from '@apollo/server/express4';
+import type { Request } from 'express';
 
 
 dotenv.config();
@@ -33,9 +35,9 @@ async function startServer() {
   await server.start();
 
   app.use('/graphql', expressMiddleware(server, {
-    context: async ({ req }: ExpressContextFunctionArgument) => authMiddleware({ req }),
-
-
+    context: async ({ req }: ExpressContextFunctionArgument): Promise<{ user: JwtPayload | null }> => {
+      return authMiddleware({ req: req as Request }); // ✅ Force TypeScript to treat it as an Express request
+    },
   }));
 
   app.listen(PORT, () => {
