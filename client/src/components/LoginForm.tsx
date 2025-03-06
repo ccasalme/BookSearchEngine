@@ -39,6 +39,7 @@ const LoginForm = ({ handleModalClose }: { handleModalClose: () => void }) => {
       }
 
       Auth.login(data.login.token);
+      handleModalClose(); // ✅ Close modal after login
     } catch (err) {
       console.error(err);
       setShowAlert(true);
