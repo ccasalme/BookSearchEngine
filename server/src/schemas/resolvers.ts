@@ -1,7 +1,7 @@
 import { AuthenticationError } from 'apollo-server-errors';
-import User from '../models/User.ts';
-import type { UserDocument } from '../models/User.ts';
-import { signToken } from '../services/auth.ts';
+import User from '../models/User.js';
+import type { UserDocument } from '../models/User.js';
+import { signToken } from '../services/auth.js';
 
 const resolvers = {
   Query: {
@@ -14,9 +14,15 @@ const resolvers = {
   Mutation: {
     login: async (_parent: any, { email, password }: { email: string, password: string }) => {
       const user: UserDocument | null = await User.findOne({ email });
-      if (!user || !(await user.isCorrectPassword(password))) {
+      if (!user) {
         throw new AuthenticationError('Invalid credentials');
       }
+      
+      const isValid = await user.isCorrectPassword(password);
+      if (!isValid) {
+        throw new AuthenticationError('Invalid credentials');
+      }
+      
       const token = signToken({
         _id: user._id.toHexString(),
         username: user.username,
@@ -27,6 +33,7 @@ const resolvers = {
 
     addUser: async (_parent: any, { username, email, password }: { username: string, email: string, password: string }) => {
       const user: UserDocument = await User.create({ username, email, password });
+      
       const token = signToken({
         _id: user._id.toHexString(),
         username: user.username,
