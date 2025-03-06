@@ -7,7 +7,12 @@ import type { User } from '../models/User';
 
 const SignupForm = ({ handleModalClose }: { handleModalClose: () => void }) => {
   // set initial form state
-  const [userFormData, setUserFormData] = useState<User>({ username: '', email: '', password: '', savedBooks: [] });
+  const [userFormData, setUserFormData] = useState<User>({
+    username: '',
+    email: '',
+    password: '',
+    savedBooks: [],
+  } as User);
   const [validated] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [signup] = useSignup(); // ✅ Apollo Mutation Hook
@@ -32,7 +37,7 @@ const SignupForm = ({ handleModalClose }: { handleModalClose: () => void }) => {
         variables: {
           username: userFormData.username,
           email: userFormData.email,
-          password: userFormData.password,
+          password: userFormData.password || '', // ✅ Ensures password is always a string
         },
       });
 
