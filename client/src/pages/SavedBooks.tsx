@@ -1,46 +1,71 @@
+import { useState, useEffect } from 'react';
 import { Container, Card, Button, Row, Col } from 'react-bootstrap';
-import { useUserData, useRemoveBook } from '../utils/API.js';
+import { useUserData, useRemoveBook } from '../utils/API';
 import Auth from '../utils/auth';
 import { removeBookId } from '../utils/localStorage';
-import type { User } from '../models/User.js';
+import type { User } from '../models/User';
+import type { Book } from '../models/Book';
 
 const SavedBooks = () => {
-  const { data } = useUserData();
-  const userData: User = data?.me || { username: '', email: '', password: '', savedBooks: [] };
+  const { data, refetch } = useUserData();
   const [removeBookMutation] = useRemoveBook();
 
-  // create function that accepts the book's mongo _id value as param and deletes the book from the database
-  const handleDeleteBook = async (bookId: string) => {
-    const token = Auth.loggedIn() ? Auth.getToken() : null;
+  const [userData, setUserData] = useState<User>({
+    username: '',
+    email: '',
+    password: '',
+    savedBooks: [],
+  });
 
-    if (!token) {
-      return false;
+  useEffect(() => {
+    if (data?.me) {
+      console.log("🔄 Updating userData with:", data.me);
+      setUserData(data.me);
     }
+  }, [data]);
 
+  const handleDeleteBook = async (bookId?: string) => {
+    if (!bookId) {
+      console.error("❌ ERROR: bookId is undefined! Cannot delete.");
+      return;
+    }
+  
+    console.log(`🗑 Deleting book with ID: ${bookId}`);
+  
+    const token = Auth.loggedIn() ? Auth.getToken() : null;
+    if (!token) {
+      console.error("❌ No token found, user is not logged in.");
+      return;
+    }
+  
     try {
       const { data } = await removeBookMutation({ variables: { bookId } });
-
+  
       if (data?.removeBook) {
+        console.log("✅ Book deleted successfully:", bookId);
         removeBookId(bookId);
+  
+        // 🔥 Ensure UI updates immediately
+        setUserData((prevUserData) => {
+          const updatedBooks = prevUserData.savedBooks.filter((book) => book.bookId !== bookId);
+          console.log("📌 Updated Saved Books List:", updatedBooks);
+          return { ...prevUserData, savedBooks: updatedBooks };
+        });
+  
+        setTimeout(() => refetch(), 300); // ✅ Force UI refresh with a small delay
       }
     } catch (err) {
-      console.error('Error removing book:', err);
+      console.error("❌ Error deleting book:", err);
     }
   };
-
-  if (!data) {
-    return <h2>LOADING...</h2>;
-  }
+  
+  
 
   return (
     <>
       <div className='text-light bg-dark p-5'>
         <Container>
-          {userData.username ? (
-            <h1>Viewing {userData.username}'s saved books!</h1>
-          ) : (
-            <h1>Viewing saved books!</h1>
-          )}
+          <h1>Viewing {userData.username}'s saved books!</h1>
         </Container>
       </div>
       <Container>
@@ -52,27 +77,46 @@ const SavedBooks = () => {
             : 'You have no saved books!'}
         </h2>
         <Row>
-          {userData.savedBooks.map((book) => {
+          {userData.savedBooks.map((book, index) => {
+            console.log(`📝 Rendering Book ${index + 1}:`, book);
+
+            // 🔥 Ensure bookId is assigned properly
+            const formattedBook: Book = {
+              bookId: book.bookId || `fallback-key-${index}`,
+              title: book.title || "Unknown Title",
+              authors: book.authors || ["Unknown Author"],
+              description: book.description || "No description available.",
+              image: book.image || "https://via.placeholder.com/150",
+              link: book.link || "#",
+            };
+
             return (
-              <Col md='4' key={book.bookId}>
+              <Col md='4' key={formattedBook.bookId}>
                 <Card border='dark'>
-                  {book.image ? (
-                    <Card.Img
-                      src={book.image}
-                      alt={`The cover for ${book.title}`}
-                      variant='top'
-                    />
-                  ) : null}
+                  <Card.Img
+                    src={formattedBook.image}
+                    alt={`The cover for ${formattedBook.title}`}
+                    variant='top'
+                  />
                   <Card.Body>
-                    <Card.Title>{book.title}</Card.Title>
-                    <p className='small'>Authors: {book.authors}</p>
-                    <Card.Text>{book.description}</Card.Text>
-                    <Button
-                      className='btn-block btn-danger'
-                      onClick={() => handleDeleteBook(book.bookId)}
-                    >
-                      Delete this Book!
-                    </Button>
+                    <Card.Title>{formattedBook.title}</Card.Title>
+                    <p className='small'><em>Authors: {formattedBook.authors?.join(', ')}</em></p>
+                    <Card.Text>{formattedBook.description}</Card.Text>
+
+                    {formattedBook.bookId ? (
+                      <Button
+                        className='btn-block btn-danger'
+                        onClick={() => {
+                          console.log("🛑 Trying to delete book:", formattedBook);
+                          handleDeleteBook(formattedBook.bookId);
+                        }}
+                      >
+                        Delete this Book!
+                      </Button>
+                    ) : (
+                      <p className="text-danger">❌ Cannot delete: Missing bookId</p>
+                    )}
+
                   </Card.Body>
                 </Card>
               </Col>
