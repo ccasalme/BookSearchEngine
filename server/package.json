@@ -5,9 +5,9 @@
   "main": "dist/server.js",
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "develop": "tsc --watch & nodemon dist/server.js", 
     "start": "node dist/server.js",
-    "develop": "nodemon --exec ts-node src/server.ts"
+    "build": "tsc"
   },
   "dependencies": {
     "@apollo/server": "^4.11.3",
