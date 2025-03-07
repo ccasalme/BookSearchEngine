@@ -39,11 +39,11 @@ const SearchBooks = () => {
       console.log("📚 Google Books API Response:", items); // ✅ Debug API response
   
       const bookData = items.map((book: GoogleAPIBook) => ({
-        bookId: book.id,  // ✅ Extracting `id` properly!
+        bookId: book.id,  // ✅ Ensure we assign `id` from Google API to `bookId`
         authors: book.volumeInfo.authors || ['No author to display'],
         title: book.volumeInfo.title,
-        description: book.volumeInfo.description,
-        image: book.volumeInfo.imageLinks?.thumbnail || 'https://via.placeholder.com/150',  // ✅ Prevent missing images!
+        description: book.volumeInfo.description || "No description available.",
+        image: book.volumeInfo.imageLinks?.thumbnail || 'https://via.placeholder.com/150',
       }));
   
       console.log("✅ Mapped Book Data:", bookData); // ✅ Debugging to check bookId
@@ -54,6 +54,7 @@ const SearchBooks = () => {
       console.error(err);
     }
   };
+  
   
 
   const handleSaveBook = async (bookId: string) => {

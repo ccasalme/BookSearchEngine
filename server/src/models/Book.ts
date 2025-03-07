@@ -10,7 +10,7 @@ interface BookDocument extends Document {
 }
 
 const bookSchema = new Schema<BookDocument>({
-  bookId: { type: String, required: true },  // ✅ Ensure it's required!
+  bookId: { type: String, required: true, unique: true },  // ✅ Ensure it's required!
   authors: [{ type: String }],
   description: { type: String, required: true },
   image: { type: String },

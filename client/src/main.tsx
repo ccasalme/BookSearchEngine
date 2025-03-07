@@ -18,7 +18,7 @@ const router = createBrowserRouter([
       { path: '/saved', element: <SavedBooks /> }
     ]
   }
-]);
+]);  // ✅ Removed `future` flag to prevent errors
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <ApolloProvider client={client}>  {/* ✅ Wrap everything in ApolloProvider */}

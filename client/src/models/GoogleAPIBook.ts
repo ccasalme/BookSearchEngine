@@ -9,6 +9,6 @@ export interface GoogleAPIVolumeInfo {
 }
 
 export interface GoogleAPIBook {
-  id: string;
+  id: string;  // ✅ This is how Google Books API provides the ID!
   volumeInfo: GoogleAPIVolumeInfo;
 }

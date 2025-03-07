@@ -56,7 +56,9 @@ const resolvers = {
         { $addToSet: { savedBooks: input } },  // ✅ Prevents duplicate books
         { new: true }
       );
-    },    
+    },
+    
+    
     
     removeBook: async (_parent: any, { bookId }: any, context: any) => {
       if (!context.user) throw new AuthenticationError('Not logged in');

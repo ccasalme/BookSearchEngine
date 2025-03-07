@@ -11,9 +11,7 @@ interface UserDocument extends Document {
   savedBooks: BookDocument[];
   isCorrectPassword(password: string): Promise<boolean>;
   bookCount: number;
-  removeBook(bookId: string): Promise<UserDocument>; // ✅ Added this!
 }
-
 
 const userSchema = new Schema<UserDocument>(
   {
@@ -41,7 +39,7 @@ const userSchema = new Schema<UserDocument>(
   }
 );
 
-// **🔥 Hash password before saving**
+// 🔥 Hash password before saving
 userSchema.pre('save', async function (next) {
   if (this.isNew || this.isModified('password')) {
     const saltRounds = 10;
@@ -50,12 +48,12 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-// **🔥 Compare passwords for login**
+// 🔥 Compare passwords for login
 userSchema.methods.isCorrectPassword = async function (password: string) {
   return await bcrypt.compare(password, this.password);
 };
 
-// **🔥 Virtual for book count**
+// 🔥 Virtual for book count
 userSchema.virtual('bookCount').get(function () {
   return this.savedBooks.length;
 });

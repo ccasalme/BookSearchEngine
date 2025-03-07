@@ -5,4 +5,5 @@ export interface User {
   email: string;
   password: string;
   savedBooks: Book[];
+  removeBook?(bookId: string): void;  // ✅ Ensures removeBook function exists
 }
