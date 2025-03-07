@@ -5,6 +5,8 @@ import Auth from '../utils/auth';
 import { removeBookId } from '../utils/localStorage';
 import type { User } from '../models/User';
 import type { Book } from '../models/Book';
+import { GET_ME } from '../graphql/queries';  // ✅ Import the query!
+
 
 const SavedBooks = () => {
   const { data, refetch } = useUserData();
@@ -24,7 +26,7 @@ const SavedBooks = () => {
     }
   }, [data]);
 
-  const handleDeleteBook = async (bookId?: string) => {
+  const handleDeleteBook = async (bookId: string) => {
     if (!bookId) {
       console.error("❌ ERROR: bookId is undefined! Cannot delete.");
       return;
@@ -39,28 +41,43 @@ const SavedBooks = () => {
     }
   
     try {
-      const { data } = await removeBookMutation({ variables: { bookId } });
+      const { data } = await removeBookMutation({
+        variables: { bookId },
+        update: (cache) => {
+          // ✅ **Fix: Remove book from Apollo Cache**
+          const existingData = cache.readQuery<{ me: User }>({ query: GET_ME });
+  
+          if (existingData?.me) {
+            const updatedBooks = existingData.me.savedBooks.filter((book) => book.bookId !== bookId);
+            cache.writeQuery({
+              query: GET_ME,
+              data: { me: { ...existingData.me, savedBooks: updatedBooks } },
+            });
+          }
+        }
+      });
   
       if (data?.removeBook) {
         console.log("✅ Book deleted successfully:", bookId);
+  
+        // ✅ **Remove from Local Storage**
         removeBookId(bookId);
   
-        // 🔥 Ensure UI updates immediately
-        setUserData((prevUserData) => {
-          const updatedBooks = prevUserData.savedBooks.filter((book) => book.bookId !== bookId);
-          console.log("📌 Updated Saved Books List:", updatedBooks);
-          return { ...prevUserData, savedBooks: updatedBooks };
-        });
+        // ✅ **Instantly Update UI**
+        setUserData((prevUserData) => ({
+          ...prevUserData,
+          savedBooks: prevUserData.savedBooks.filter((book) => book.bookId !== bookId),
+        }));
   
-        setTimeout(() => refetch(), 300); // ✅ Force UI refresh with a small delay
+        // ✅ **Refetch Data to Sync with Backend**
+        await refetch();
       }
     } catch (err) {
       console.error("❌ Error deleting book:", err);
     }
-  };
+  };  
   
   
-
   return (
     <>
       <div className='text-light bg-dark p-5'>

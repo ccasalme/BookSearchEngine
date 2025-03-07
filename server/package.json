@@ -7,7 +7,8 @@
   "scripts": {
     "develop": "tsc --watch & nodemon dist/server.js", 
     "start": "node dist/server.js",
-    "build": "tsc"
+    "build": "tsc",
+    "watch": "nodemon --exec ts-node src/server.ts" 
   },
   "dependencies": {
     "@apollo/server": "^4.11.3",
