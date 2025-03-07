@@ -44,16 +44,26 @@ const resolvers = {
 
     saveBook: async (_parent: any, { input }: any, context: any) => {
       if (!context.user) throw new AuthenticationError('Not logged in');
+    
+      console.log("📥 Saving book:", input);
+    
+      if (!input.bookId) {
+        throw new Error("❌ bookId is required!");
+      }
+    
       return User.findByIdAndUpdate(
         context.user._id.toString(),
-        { $push: { savedBooks: input } },
+        { $addToSet: { savedBooks: input } },  // ✅ Prevents duplicate books
         { new: true }
       );
-    },
-
+    },    
+    
     removeBook: async (_parent: any, { bookId }: any, context: any) => {
       if (!context.user) throw new AuthenticationError('Not logged in');
-      return User.findByIdAndUpdate(
+    
+      console.log("🗑 Removing book with ID:", bookId);
+    
+      return await User.findByIdAndUpdate(
         context.user._id.toString(),
         { $pull: { savedBooks: { bookId } } },
         { new: true }

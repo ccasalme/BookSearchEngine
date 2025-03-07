@@ -1,12 +1,13 @@
 import { useMutation, useQuery } from '@apollo/client';
 import { LOGIN_USER, ADD_USER, SAVE_BOOK, REMOVE_BOOK } from '../graphql/mutations';
 import { GET_ME } from '../graphql/queries';
-import { User } from '../models/User.js';
-import type { Book } from '../models/Book.js';
+import type { User } from '../models/User';
+import type { Book } from '../models/Book';
 
 // Get logged-in user's info
-export const useUserData = (): { data?: { me: User } } => {
-  return useQuery(GET_ME);
+export const useUserData = () => {
+  const { data, refetch } = useQuery<{ me: User }>(GET_ME); // ✅ Ensure refetch is included
+  return { data, refetch };
 };
 
 // Create a new user
