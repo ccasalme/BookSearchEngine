@@ -1,8 +1,8 @@
 import { Container, Card, Button, Row, Col } from 'react-bootstrap';
-import { useUserData, useRemoveBook } from '../utils/API';
+import { useUserData, useRemoveBook } from '../utils/API.js';
 import Auth from '../utils/auth';
 import { removeBookId } from '../utils/localStorage';
-import type { User } from '../models/User';
+import type { User } from '../models/User.js';
 
 const SavedBooks = () => {
   const { data } = useUserData();

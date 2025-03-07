@@ -28,28 +28,33 @@ const SearchBooks = () => {
   const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!searchInput) return;
-
+  
     try {
       const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${searchInput}`);
       if (!response.ok) {
-        throw new Error('something went wrong!');
+        throw new Error('❌ Something went wrong!');
       }
-
+  
       const { items } = await response.json();
+      console.log("📚 Google Books API Response:", items); // ✅ Debug API response
+  
       const bookData = items.map((book: GoogleAPIBook) => ({
-        bookId: book.id,
+        bookId: book.id,  // ✅ Extracting `id` properly!
         authors: book.volumeInfo.authors || ['No author to display'],
         title: book.volumeInfo.title,
         description: book.volumeInfo.description,
-        image: book.volumeInfo.imageLinks?.thumbnail || '',
+        image: book.volumeInfo.imageLinks?.thumbnail || 'https://via.placeholder.com/150',  // ✅ Prevent missing images!
       }));
-
+  
+      console.log("✅ Mapped Book Data:", bookData); // ✅ Debugging to check bookId
+  
       setSearchedBooks(bookData);
       setSearchInput('');
     } catch (err) {
       console.error(err);
     }
   };
+  
 
   const handleSaveBook = async (bookId: string) => {
     const bookToSave = searchedBooks.find((book) => book.bookId === bookId);
