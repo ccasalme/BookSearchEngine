@@ -1,7 +1,7 @@
 import { Schema, model, type Document, type Types } from 'mongoose';
 import bcrypt from 'bcrypt';
-import bookSchema from './Book.ts';
-import type { BookDocument } from './Book.ts';
+import bookSchema from './Book.js';
+import type { BookDocument } from './Book.js';
 
 interface UserDocument extends Document {
   _id: Types.ObjectId;
@@ -39,7 +39,7 @@ const userSchema = new Schema<UserDocument>(
   }
 );
 
-// Hash user password before saving
+// 🔥 Hash password before saving
 userSchema.pre('save', async function (next) {
   if (this.isNew || this.isModified('password')) {
     const saltRounds = 10;
@@ -48,12 +48,12 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-// Method to compare and validate passwords
+// 🔥 Compare passwords for login
 userSchema.methods.isCorrectPassword = async function (password: string) {
   return await bcrypt.compare(password, this.password);
 };
 
-// Virtual field for book count
+// 🔥 Virtual for book count
 userSchema.virtual('bookCount').get(function () {
   return this.savedBooks.length;
 });

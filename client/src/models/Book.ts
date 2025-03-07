@@ -1,7 +1,7 @@
 export interface Book {
-  authors: string[],
+  bookId: string;  // ✅ This must always match Google Books `id`
+  authors: string[];
   description: string;
-  bookId: string;
   image: string;
   link: string;
   title: string;

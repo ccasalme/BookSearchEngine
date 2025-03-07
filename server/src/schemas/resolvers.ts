@@ -1,7 +1,7 @@
 import { AuthenticationError } from 'apollo-server-errors';
-import User from '../models/User.ts';
-import type { UserDocument } from '../models/User.ts';
-import { signToken } from '../services/auth.ts';
+import User from '../models/User.js';
+import type { UserDocument } from '../models/User.js';
+import { signToken } from '../services/auth.js';
 
 const resolvers = {
   Query: {
@@ -14,9 +14,15 @@ const resolvers = {
   Mutation: {
     login: async (_parent: any, { email, password }: { email: string, password: string }) => {
       const user: UserDocument | null = await User.findOne({ email });
-      if (!user || !(await user.isCorrectPassword(password))) {
+      if (!user) {
         throw new AuthenticationError('Invalid credentials');
       }
+      
+      const isValid = await user.isCorrectPassword(password);
+      if (!isValid) {
+        throw new AuthenticationError('Invalid credentials');
+      }
+      
       const token = signToken({
         _id: user._id.toHexString(),
         username: user.username,
@@ -27,6 +33,7 @@ const resolvers = {
 
     addUser: async (_parent: any, { username, email, password }: { username: string, email: string, password: string }) => {
       const user: UserDocument = await User.create({ username, email, password });
+      
       const token = signToken({
         _id: user._id.toHexString(),
         username: user.username,
@@ -37,21 +44,33 @@ const resolvers = {
 
     saveBook: async (_parent: any, { input }: any, context: any) => {
       if (!context.user) throw new AuthenticationError('Not logged in');
+    
+      console.log("📥 Saving book:", input);
+    
+      if (!input.bookId) {
+        throw new Error("❌ bookId is required!");
+      }
+    
       return User.findByIdAndUpdate(
         context.user._id.toString(),
-        { $push: { savedBooks: input } },
+        { $addToSet: { savedBooks: input } },  // ✅ Prevents duplicate books
         { new: true }
       );
     },
-
+    
+    
+    
     removeBook: async (_parent: any, { bookId }: any, context: any) => {
       if (!context.user) throw new AuthenticationError('Not logged in');
-      return User.findByIdAndUpdate(
+    
+      console.log("🗑 Removing book with ID:", bookId);
+    
+      return await User.findByIdAndUpdate(
         context.user._id.toString(),
         { $pull: { savedBooks: { bookId } } },
         { new: true }
       );
-    },
+    },    
   },
 };
 

@@ -1,19 +1,21 @@
 import { useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { Form, Button, Alert } from 'react-bootstrap';
-
-import { createUser } from '../utils/API';
+import { useSignup } from '../utils/API';
 import Auth from '../utils/auth';
 import type { User } from '../models/User';
 
-// biome-ignore lint/correctness/noEmptyPattern: <explanation>
-const SignupForm = ({}: { handleModalClose: () => void }) => {
+const SignupForm = ({ handleModalClose }: { handleModalClose: () => void }) => {
   // set initial form state
-  const [userFormData, setUserFormData] = useState<User>({ username: '', email: '', password: '', savedBooks: [] });
-  // set state for form validation
+  const [userFormData, setUserFormData] = useState<User>({
+    username: '',
+    email: '',
+    password: '',
+    savedBooks: [],
+  } as User);
   const [validated] = useState(false);
-  // set state for alert
   const [showAlert, setShowAlert] = useState(false);
+  const [signup] = useSignup(); // ✅ Apollo Mutation Hook
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -31,14 +33,20 @@ const SignupForm = ({}: { handleModalClose: () => void }) => {
     }
 
     try {
-      const response = await createUser(userFormData);
+      const { data } = await signup({
+        variables: {
+          username: userFormData.username,
+          email: userFormData.email,
+          password: userFormData.password || '', // ✅ Ensures password is always a string
+        },
+      });
 
-      if (!response.ok) {
-        throw new Error('something went wrong!');
+      if (!data?.addUser?.token) {
+        throw new Error('Signup failed!');
       }
 
-      const { token } = await response.json();
-      Auth.login(token);
+      Auth.login(data.addUser.token);
+      handleModalClose(); // ✅ Close modal after signup
     } catch (err) {
       console.error(err);
       setShowAlert(true);
@@ -54,9 +62,7 @@ const SignupForm = ({}: { handleModalClose: () => void }) => {
 
   return (
     <>
-      {/* This is needed for the validation functionality above */}
       <Form noValidate validated={validated} onSubmit={handleFormSubmit}>
-        {/* show alert if server response is bad */}
         <Alert dismissible onClose={() => setShowAlert(false)} show={showAlert} variant='danger'>
           Something went wrong with your signup!
         </Alert>

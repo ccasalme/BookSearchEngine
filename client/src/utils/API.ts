@@ -1,60 +1,31 @@
-import type { User } from '../models/User.js';
-import type { Book } from '../models/Book.js';
+import { useMutation, useQuery } from '@apollo/client';
+import { LOGIN_USER, ADD_USER, SAVE_BOOK, REMOVE_BOOK } from '../graphql/mutations';
+import { GET_ME } from '../graphql/queries';
+import type { User } from '../models/User';
+import type { Book } from '../models/Book';
 
-// route to get logged in user's info (needs the token)
-export const getMe = (token: string) => {
-  return fetch('/api/users/me', {
-    headers: {
-      'Content-Type': 'application/json',
-      authorization: `Bearer ${token}`,
-    },
-  });
+// Get logged-in user's info
+export const useUserData = () => {
+  const { data, refetch } = useQuery<{ me: User }>(GET_ME); // ✅ Ensure refetch is included
+  return { data, refetch };
 };
 
-export const createUser = (userData: User) => {
-  return fetch('/api/users', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(userData),
-  });
+// Create a new user
+export const useSignup = () => {
+  return useMutation<{ addUser: { token: string; user: User } }, { username: string; email: string; password: string }>(ADD_USER);
 };
 
-export const loginUser = (userData: User) => {
-  return fetch('/api/users/login', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(userData),
-  });
+// Login a user
+export const useLogin = () => {
+  return useMutation<{ login: { token: string; user: User } }, { email: string; password: string }>(LOGIN_USER);
 };
 
-// save book data for a logged in user
-export const saveBook = (bookData: Book, token: string) => {
-  return fetch('/api/users', {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(bookData),
-  });
+// Save a book for logged-in user
+export const useSaveBook = () => {
+  return useMutation<{ saveBook: User }, { input: Book }>(SAVE_BOOK);
 };
 
-// remove saved book data for a logged in user
-export const deleteBook = (bookId: string, token: string) => {
-  return fetch(`/api/users/books/${bookId}`, {
-    method: 'DELETE',
-    headers: {
-      authorization: `Bearer ${token}`,
-    },
-  });
-};
-
-// make a search to google books api
-// https://www.googleapis.com/books/v1/volumes?q=harry+potter
-export const searchGoogleBooks = (query: string) => {
-  return fetch(`https://www.googleapis.com/books/v1/volumes?q=${query}`);
+// Remove saved book from user profile
+export const useRemoveBook = () => {
+  return useMutation<{ removeBook: User }, { bookId: string }>(REMOVE_BOOK);
 };
