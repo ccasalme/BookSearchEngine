@@ -11,7 +11,9 @@ interface UserDocument extends Document {
   savedBooks: BookDocument[];
   isCorrectPassword(password: string): Promise<boolean>;
   bookCount: number;
+  removeBook(bookId: string): Promise<UserDocument>; // ✅ Added this!
 }
+
 
 const userSchema = new Schema<UserDocument>(
   {
