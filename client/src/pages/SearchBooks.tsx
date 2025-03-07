@@ -54,19 +54,31 @@ const SearchBooks = () => {
   const handleSaveBook = async (bookId: string) => {
     const bookToSave = searchedBooks.find((book) => book.bookId === bookId);
     if (!bookToSave) return;
-
+  
     const token = Auth.loggedIn() ? Auth.getToken() : null;
-    if (!token) return;
-
+    if (!token) {
+      console.error("No token found, user is not logged in.");
+      return;
+    }
+  
     try {
-      const { data } = await saveBookMutation({ variables: { input: bookToSave } });
+      const { data } = await saveBookMutation({
+        variables: { input: bookToSave },
+        context: {
+          headers: {
+            authorization: `Bearer ${token}`, // ✅ Attach token to request
+          },
+        },
+      });
+  
       if (data?.saveBook) {
         setSavedBookIds([...savedBookIds, bookToSave.bookId]);
       }
     } catch (err) {
-      console.error('Error saving book:', err);
+      console.error("Error saving book:", err);
     }
   };
+  
 
   return (
     <>
